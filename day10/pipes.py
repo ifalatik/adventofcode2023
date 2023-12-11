@@ -1,5 +1,4 @@
 from enum import Enum
-from itertools import product
 from typing import Optional
 
 
@@ -113,7 +112,7 @@ class PipeGame:
                     return cur_x - 1, cur_y, next_pipe.connected_directions[0]
                 return None
 
-    def parse_and_analyze_loop(self) -> int:
+    def parse_and_analyze_loop(self) -> list[list[int]]:
         """
         find the loop, while registering the amount of steps it took to reach the field
         :returns: the maximum amount of steps required
@@ -173,7 +172,7 @@ class PipeGame:
                     cur_x, cur_y, cur_direction = \
                         self._get_next_pipe_coordinates_and_direction(cur_x, cur_y, cur_direction)
                     cur_steps_taken += 1
-                return max(max(points_x) for points_x in steps_taken_map)
+                return steps_taken_map
 
         # error state
         raise Exception('No full loop was found.')
@@ -181,7 +180,8 @@ class PipeGame:
 
 def one(in_lines: list[str]) -> int:
     pipe_game = PipeGame(in_lines)
-    return pipe_game.parse_and_analyze_loop()
+    steps_required = pipe_game.parse_and_analyze_loop()
+    return max(max(points_x) for points_x in steps_required)
 
 
 if __name__ == '__main__':

@@ -22,6 +22,16 @@ class TestPipeGame(unittest.TestCase):
 
     pass
 
+    def test_parse_and_analyze_loop(self):
+        pipe_game = pipes.PipeGame(TestPipeGame.test_input_lines)
+        self.assertEqual([
+            [0, 0, 0, 1, 2],
+            [0, 2, 1, 4, 3],
+            [4, 3, 0, 5, 0],
+            [5, 6, 7, 6, 0],
+            [0, 0, 8, 7, 0]],
+                         pipe_game.parse_and_analyze_loop())
+
     def test_one(self):
         self.assertEqual(8, pipes.one(TestPipeGame.test_input_lines))
 
