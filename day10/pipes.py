@@ -1,10 +1,12 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, TypeVar, Type
+
+T = TypeVar('T', bound='Pipe')
 
 
 class Pipe:
     connected_directions: tuple[Optional['Pipe.Direction'], Optional['Pipe.Direction']]
-    ground: bool
+    char: str
 
     class Direction(Enum):
         NORTH = 0
@@ -15,9 +17,9 @@ class Pipe:
     def __init__(self, character: str):
         if len(character) != 1:
             raise Exception(f"Can't parse character '{character}' to pipe as length isn't 1.")
+        self.char = character
         if character == '.':
             self.connected_directions = (None, None)
-            self.ground = True
         else:
             match character:
                 case '|':
@@ -36,10 +38,33 @@ class Pipe:
                     self.connected_directions = (None, None)
                 case _:
                     raise Exception(f"Can't parse character '{character}' to pipe. Character not found.")
-            self.ground = False
 
     def __str__(self):
-        return f"{self.connected_directions[0]}, {self.connected_directions[1]}"
+        return self.char
+
+    @classmethod
+    def from_directions(cls: Type[T], direction1: Direction, direction2: Direction) -> T:
+        if direction1 == direction2:
+            raise Exception("Parameters can't be equal.")
+        if direction1.value > direction2.value:
+            direction1, direction2 = direction2, direction1
+        match direction1:
+            case Pipe.Direction.NORTH:
+                match direction2:
+                    case Pipe.Direction.EAST:
+                        return cls('L')
+                    case Pipe.Direction.SOUTH:
+                        return cls('|')
+                    case Pipe.Direction.WEST:
+                        return cls('J')
+            case Pipe.Direction.EAST:
+                match direction2:
+                    case Pipe.Direction.SOUTH:
+                        return cls('F')
+                    case Pipe.Direction.WEST:
+                        return cls('-')
+            case Pipe.Direction.SOUTH:
+                return cls('7')
 
 
 class PipeGame:
@@ -125,6 +150,7 @@ class PipeGame:
             cur_x = self.starting_coordinates[0]
             cur_y = self.starting_coordinates[1]
             cur_direction = direction
+            last_walked_direction = direction
             # walk the loop in one direction, while registering amount of steps
             # if first step is not possible, go to next
             step_result = self._get_next_pipe_coordinates_and_direction(cur_x, cur_y, cur_direction)
@@ -163,6 +189,10 @@ class PipeGame:
                         cur_direction = Pipe.Direction.NORTH
                     case Pipe.Direction.WEST:
                         cur_direction = Pipe.Direction.EAST
+                # replace S with it's correspondent correct pipe
+                self.pipes[self.starting_coordinates[0]][self.starting_coordinates[1]] = Pipe.from_directions(
+                    direction, cur_direction
+                )
                 # walk as long as the current field used more steps during the first walkthrough
                 while steps_taken_map[cur_x][cur_y] >= cur_steps_taken:  # >= to not stop for starting position
                     # reduce steps to the amount we needed in the other direction
@@ -177,6 +207,44 @@ class PipeGame:
         # error state
         raise Exception('No full loop was found.')
 
+    def sanitize_loop(self, loop_analysis: list[list[int]]):
+        for x, pipes_x in enumerate(self.pipes):
+            for y, pipe in enumerate(pipes_x):
+                if not (loop_analysis[x][y] or
+                        (x == self.starting_coordinates[0] and y == self.starting_coordinates[1])):
+                    self.pipes[x][y] = None
+
+    def get_num_enclosed_tiles(self) -> int:
+        # get enclosed tiles for each column
+        sum_enclosed_tiles = 0
+        for y, column in enumerate(self.pipes):
+            enclosed = False
+            swap_char = None
+            reset_char = None
+            for pipe in column:
+                if not pipe:
+                    if enclosed:
+                        sum_enclosed_tiles += 1
+                # ignore '|' symbols
+                elif pipe.char == '|':
+                    continue
+                elif pipe.char == '-':
+                    enclosed = not enclosed
+                    swap_char = None
+                    reset_char = None
+                elif pipe.char == swap_char:
+                    enclosed = not enclosed
+                elif pipe.char == reset_char:
+                    swap_char = None
+                    reset_char = None
+                elif pipe.char == 'F':
+                    swap_char = 'J'
+                    reset_char = 'L'
+                elif pipe.char == '7':
+                    swap_char = 'L'
+                    reset_char = 'J'
+        return sum_enclosed_tiles
+
 
 def one(in_lines: list[str]) -> int:
     pipe_game = PipeGame(in_lines)
@@ -184,7 +252,17 @@ def one(in_lines: list[str]) -> int:
     return max(max(points_x) for points_x in steps_required)
 
 
+def two(in_lines: list[str]) -> int:
+    pipe_game = PipeGame(in_lines)
+    steps_required = pipe_game.parse_and_analyze_loop()
+    pipe_game.sanitize_loop(steps_required)
+    for y in range(len(pipe_game.pipes[0])):
+        print([str(pipe_game.pipes[x][y]) if pipe_game.pipes[x][y] else ' ' for x in range(len(pipe_game.pipes))])
+    return pipe_game.get_num_enclosed_tiles()
+
+
 if __name__ == '__main__':
     with open('input.txt', 'r') as f:
         input_lines = f.readlines()
     print(one(input_lines))
+    print(two(input_lines))
