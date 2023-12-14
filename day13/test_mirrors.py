@@ -27,6 +27,9 @@ class TestMirrors(unittest.TestCase):
     def test_one(self):
         self.assertEqual(405, mirrors.one(TestMirrors.test_input_lines))
 
+    def test_two(self):
+        self.assertEqual(400, mirrors.two(TestMirrors.test_input_lines))
+
 
 if __name__ == '__main__':
     unittest.main()
