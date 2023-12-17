@@ -4,11 +4,13 @@ from dataclasses import dataclass
 SYMBOL_REGEX = r'[^\d.]'
 NUMBER_REGEX = r'\d+'
 
+
 @dataclass
 class Number:
     x: int
     y: int
     value: int
+
 
 class Engine:
     schematic: list[list[str]]
@@ -24,24 +26,24 @@ class Engine:
         result = []
         # get all numbers above
         if y != 0:
-            for number_match in re.finditer(NUMBER_REGEX, ''.join(self.schematic[y-1])):
-                if x in range(number_match.start(0)-1, number_match.end(0)+1):
-                    result.append(Number(number_match.start(0), y-1, int(number_match.group(0))))
+            for number_match in re.finditer(NUMBER_REGEX, ''.join(self.schematic[y - 1])):
+                if x in range(number_match.start(0) - 1, number_match.end(0) + 1):
+                    result.append(Number(number_match.start(0), y - 1, int(number_match.group(0))))
         # get all numbers below
-        if y != len(self.schematic)-1:
-            for number_match in re.finditer(NUMBER_REGEX, ''.join(self.schematic[y+1])):
-                if x in range(number_match.start(0)-1, number_match.end(0)+1):
-                    result.append(Number(number_match.start(0), y+1, int(number_match.group(0))))
+        if y != len(self.schematic) - 1:
+            for number_match in re.finditer(NUMBER_REGEX, ''.join(self.schematic[y + 1])):
+                if x in range(number_match.start(0) - 1, number_match.end(0) + 1):
+                    result.append(Number(number_match.start(0), y + 1, int(number_match.group(0))))
         # get number to the left
         if x != 0:
-            number_match = re.search(NUMBER_REGEX+'$', ''.join(self.schematic[y][:x]))
+            number_match = re.search(NUMBER_REGEX + '$', ''.join(self.schematic[y][:x]))
             if number_match:
                 result.append(Number(number_match.start(0), y, int(number_match.group(0))))
         # get number to the right
-        if x != len(self.schematic[0])-1:
-            number_match = re.search('^'+ NUMBER_REGEX, ''.join(self.schematic[y][x+1:]))
+        if x != len(self.schematic[0]) - 1:
+            number_match = re.search('^' + NUMBER_REGEX, ''.join(self.schematic[y][x + 1:]))
             if number_match:
-                result.append(Number(x+1, y, int(number_match.group(0))))
+                result.append(Number(x + 1, y, int(number_match.group(0))))
         return result
 
     def get_relevant_numbers(self) -> list[int]:
@@ -62,7 +64,7 @@ class Engine:
                 if len(surrounding_numbers) == 2:
                     if surrounding_numbers not in number_pairs:
                         number_pairs.append(surrounding_numbers)
-        return [n1.value*n2.value for n1, n2 in number_pairs]
+        return [n1.value * n2.value for n1, n2 in number_pairs]
 
 
 def one(in_lines: list[str]) -> int:
