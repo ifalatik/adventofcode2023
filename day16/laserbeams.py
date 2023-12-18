@@ -56,6 +56,7 @@ class Tile:
     def reset_visits(self) -> None:
         self._visited_in_directions = []
 
+
 @dataclass
 class Step:
     tile: Tile
