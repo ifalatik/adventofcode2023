@@ -120,9 +120,7 @@ def collect_fields(input_lines: list[str]) -> list[Field]:
 
 def one(input_lines: list[str]) -> int:
     fields = collect_fields(input_lines)
-    result = 0
-    for field in fields:
-        result += field.get_points()
+    result = sum(field.get_points() for field in fields)
     return result
 
 
